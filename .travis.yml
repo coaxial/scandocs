@@ -8,7 +8,7 @@ install:
 jobs:
   include:
     - stage: lint
-      script: shellcheck -x **/*.sh
+      script: shellcheck -x scan.sh
 
 notifications:
   email: false
