@@ -1,6 +1,6 @@
 language: sh
 os: linux
-virt: lxd
+virt: vm
 
 install:
   - .travis/install_shellcheck.sh
