@@ -2,13 +2,13 @@ language: sh
 os: linux
 virt: lxd
 
-addons:
-  apt:
-    packages:
-      - shellcheck
+install:
+  - .travis/install_shellcheck.sh
 
-script:
-  - shellcheck -x **/*.sh
+jobs:
+  include:
+    - stage: lint
+      script: shellcheck -x **/*.sh
 
 notifications:
   email: false
