@@ -1,0 +1,14 @@
+language: sh
+os: linux
+virt: vm
+
+install:
+  - .travis/install_shellcheck.sh
+
+jobs:
+  include:
+    - stage: lint
+      script: shellcheck --external-sources scan.sh
+
+notifications:
+  email: false
