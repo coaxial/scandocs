@@ -1,4 +1,6 @@
 language: sh
+os: linux
+virt: lxd
 
 addons:
   apt:
