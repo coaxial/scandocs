@@ -66,8 +66,8 @@ scan_pages() {
     --resolution 300 \
     --scan-script ./lib/process_page.sh \
     --script-wait \
-    --scr
     --output-file "$temp_dir/$filename_pattern" \
+    --progress \
     --verbose
 }
 
