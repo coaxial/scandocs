@@ -94,6 +94,12 @@ convert_to_png() {
   convert "$file" "$path/$filename.png"
 }
 
+optimize_png() {
+  debug_log_message "optimizing page"
+
+  optipng -silent "$path/$filename.png"
+}
+
 log_message() {
   # output messages to stderr
   echo "[p$page_number] $1" >&2
@@ -137,6 +143,9 @@ main() {
 
   convert_to_png
   debug_file_copy "$file" "06-png"
+
+  optimize_png
+  debug_file_copy "$file" "07-optipng"
 
   log_message "Done processing page."
 }
