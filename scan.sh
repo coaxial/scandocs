@@ -3,24 +3,13 @@ set -euo pipefail
 
 vendor_lib_dir="./lib/vendor"
 docs_scanned=0
-uuid=0
 date_string="$(date "+%Y%m%d_%H%M%S")"
-base_filename="$uuid-$date_string-"
+base_filename="$date_string-"
 filename_pattern="base_filename%04d.pnm"
 out_filename="$date_string.pdf"
 temp_dir="/tmp"
 scans_dir="$HOME/Documents/scans"
 DEBUG="${DEBUG:-}"
-
-# 0. Prompt insert doc pages to ADF
-# 1. scan doc with adf duplex and scanadf
-# 2. for each page:
-#   - rotate even pages 180 degrees
-#   - clean text 
-# 3. after all pages cleaned:
-#   - concat pnm to one pdf
-#   - name $(date "+%Y%m%d_%H%M%S").pdf 
-# 4. Prompt new doc or quit
 
 prompt_insert_pages() {
   prompt="Insert document pages in ADF and press any key to start scanning, q to quit. "
@@ -33,7 +22,6 @@ prompt_insert_pages() {
 }
 
 scan_new_doc() {
-  init_uuid
   init_date_string
   init_filenames
   scan_pages
@@ -42,17 +30,13 @@ scan_new_doc() {
   increment_docs_count
 }
 
-init_uuid() {
-  uuid="$(dbus-uuidgen)"
-}
-
 init_date_string() {
   date_string="$(date "+%Y%m%d_%H%M%S")"
 }
 
 init_filenames() {
-  base_filename="$uuid-$date_string-"
-  filename_pattern="$uuid-$date_string-%04d.pnm"
+  base_filename="$date_string-"
+  filename_pattern="$date_string-%04d.pnm"
   out_filename="$date_string.pdf"
 }
 

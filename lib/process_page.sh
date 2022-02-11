@@ -7,10 +7,9 @@ path="$(dirname $file)"
 basename="$(basename $file)"
 filename="${basename%.*}"
 extension="${basename##*.}"
-# expected filename format is <uuid>-<date_string>-<page_number>
-uuid=$(echo $filename | cut -d"-" -f1)
-date_string=$(echo $filename | cut -d"-" -f2)
-page_number=$(echo $filename | cut -d"-" -f3)
+# expected filename format is <date_string>-<page_number>
+date_string=$(echo $filename | cut -d"-" -f1)
+page_number=$(echo $filename | cut -d"-" -f2)
 vendor_lib_dir="./lib/vendor"
 out_filename="$date_string.pdf"
 temp_pdf_file="$path/$out_filename"
@@ -49,33 +48,10 @@ clean_page() {
   $vendor_lib_dir/textcleaner $file $file
 }
 
-create_or_append_pdf() {
-  if [ ! -f "$temp_pdf_file" ]; then
-    if [[ $DEBUG ]]; then
-      echo "$temp_pdf_file not found, creating it"
-    fi
-    convert "$file" "$temp_pdf_file" 
-  else
-    if [[ $DEBUG ]]; then
-      echo "$temp_pdf_file found, appending to it"
-    fi
-    convert "$temp_pdf_file" "$file" "$temp_pdf_file" 
-  fi
-}
-
-cleanup() {
-  if [[ ! $DEBUG ]]; then
-    rm "$file"
-  fi
-}
-
 debug_notice
 echo "[P$page_number] Processing page..."
 crop_image_to_size
 rotate_verso
 deskew_page
 clean_page
-# create_or_append_pdf
-# cleanup
-# echo "Page $page_number added to $temp_pdf_file."
 echo "[P$page_number] Done processing page."
