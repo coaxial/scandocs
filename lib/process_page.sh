@@ -18,6 +18,8 @@ temp_pdf_file="$path/$out_filename"
 DEBUG="${DEBUG:-}"
 
 rotate_verso() {
+  debug_log_message "rotating page"
+
   # when scanning duplex using the ADF, the verso page is upside down
   if [[ $((page_number %2)) = 0 ]]; then
     debug_log_message "even page, flipping"
@@ -26,6 +28,10 @@ rotate_verso() {
 }
 
 crop_image_to_size() {
+  debug_log_message "cropping page"
+
+  # overscanning to avoid "ghost" pages, so image must be trimmed back down to
+  # actual paper size
   local _x=$(paper_size_to_px $paper_format $SCAN_RES x)
   local _y=$(paper_size_to_px $paper_format $SCAN_RES y)
 
@@ -36,10 +42,10 @@ crop_image_to_size() {
   # If the page number is even, it means it's the verso, which is upside down.
   # The crop needs to skip the actual bottom of the image, which means the top
   # when upside down.
-  if [ $((page_number %2)) -eq 0 ]; then
-    local _crop_offset=$(($SCAN_HEIGHT - $_y)) # $SCAN_HEIGHT comes from scanadf
-    debug_log_message "even page, offsetting crop by Y ${_crop_offset}px"
-  fi
+  # if [ $((page_number %2)) -eq 0 ]; then
+  #   local _crop_offset=$(($SCAN_HEIGHT - $_y)) # $SCAN_HEIGHT comes from scanadf
+  #   debug_log_message "even page, offsetting crop by Y ${_crop_offset}px"
+  # fi
 
   mogrify -crop ${_x}x${_y}+0+$_crop_offset $file
 }
@@ -73,13 +79,23 @@ paper_size_to_px() {
 }
 
 deskew_page() {
+  debug_log_message "deskewing page"
+
   # deskew in place
   $vendor_lib_dir/textdeskew $file $file > /dev/null 2>&1 || log_message "Not enough text on page, unable to deskew"
 }
 
 clean_page() {
+  debug_log_message "cleaning page"
+
   # clean in place
   $vendor_lib_dir/textcleaner $file $file
+}
+
+convert_to_png() {
+  debug_log_message "converting page"
+
+  convert $file $path/$filename.png
 }
 
 log_message() {
@@ -93,12 +109,39 @@ debug_log_message () {
   fi
 }
 
+debug_file_copy() {
+  if [[ $DEBUG ]]; then
+    local _orig_file="$1"
+    local _stage="$2"
+
+    debug_log_message "copying file after $_stage stage"
+    cp "$_orig_file" "${path}/${filename}-${_stage}.${extension}"
+  fi
+}
+
 main() {
   log_message "Processing page..."
-  rotate_verso
-  deskew_page
-  clean_page
+
+  debug_file_copy $file "00-pnm"
+
   crop_image_to_size
+  debug_file_copy $file "01-crop"
+
+  rotate_verso
+  debug_file_copy $file "02-rotate"
+
+  deskew_page
+  debug_file_copy $file "03-deskew"
+
+  crop_image_to_size
+  debug_file_copy $file "04-crop"
+
+  clean_page
+  debug_file_copy $file "05-clean"
+
+  convert_to_png
+  debug_file_copy $file "06-png"
+
   log_message "Done processing page."
 }
 

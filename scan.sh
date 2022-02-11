@@ -84,7 +84,7 @@ increment_docs_count() {
 }
 
 assemble_pdf() {
-  pages="$temp_dir/$base_filename*.pnm"
+  pages="${temp_dir}/${base_filename}*.png"
   convert $pages "$temp_dir/$out_filename" 
 }
 
