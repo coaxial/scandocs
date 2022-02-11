@@ -17,7 +17,7 @@ DEBUG="${DEBUG:-}"
 
 debug_notice() {
   if [[ $DEBUG ]]; then
-    echo "Debug output enabled"
+    log_message "Debug output enabled"
   fi
 }
 
@@ -26,7 +26,7 @@ rotate_verso() {
   # when scanning duplex using the ADF, the verso page is upside down
   if [ $((page_number %2)) -eq 0 ]; then
     if [[ $DEBUG ]]; then
-      echo "$page_number is even, flipping"
+      log_message "even page, flipping"
     fi
     mogrify -rotate 180 $file
   fi
@@ -35,12 +35,24 @@ rotate_verso() {
 crop_image_to_size() {
   # Found using scanadf ... --verbose and -x 210 -y 297
   # 2481x3508 = A4
-  mogrify -crop 2481x3508+0+0 $file
+  crop_offset=0
+
+  # If the page number is even, it means it's the verso, which is upside down.
+  # The crop needs to skip the actual bottom of the image, which means the top
+  # when upside down.
+  if [ $((page_number %2)) -eq 0 ]; then
+    crop_offset=$(($SCAN_HEIGHT -3508)) # $SCAN_HEIGHT comes from scanadf
+    if [[ $DEBUG ]]; then
+      log_message "even page, offsetting crop by Y $crop_offset px"
+    fi
+  fi
+
+  mogrify -crop 2481x3508+0+$crop_offset $file
 }
 
 deskew_page() {
   # deskew in place
-  $vendor_lib_dir/textdeskew $file $file > /dev/null 2>&1 || echo "Not enough text, not deskewing"
+  $vendor_lib_dir/textdeskew $file $file > /dev/null 2>&1 || log_message "Not enough text on page, unable to deskew"
 }
 
 clean_page() {
@@ -48,10 +60,14 @@ clean_page() {
   $vendor_lib_dir/textcleaner $file $file
 }
 
+log_message() {
+  echo "[P$page_number] $1"
+}
+
 debug_notice
-echo "[P$page_number] Processing page..."
-crop_image_to_size
+log_message "[P$page_number] Processing page..."
 rotate_verso
 deskew_page
 clean_page
-echo "[P$page_number] Done processing page."
+crop_image_to_size
+log_message "[P$page_number] Done processing page."

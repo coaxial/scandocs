@@ -3,6 +3,7 @@ set -euo pipefail
 
 vendor_lib_dir="./lib/vendor"
 docs_scanned=0
+uuid=0
 date_string="$(date "+%Y%m%d_%H%M%S")"
 base_filename="$date_string-"
 filename_pattern="base_filename%04d.pnm"
@@ -48,7 +49,7 @@ scan_pages() {
   DEBUG=$DEBUG scanadf \
     --device-name hp5590 \
     --source "ADF Duplex" \
-    -x 210.0 -y 301.0 \
+    -x 210.0 -y 320.0 \
     --mode Gray \
     --resolution 300 \
     --scan-script ./lib/process_page.sh \
