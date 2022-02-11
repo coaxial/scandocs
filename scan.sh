@@ -68,6 +68,7 @@ scan_pages() {
   # An A4 page is 210x297mm. However, using 297mm confuses the scanner and
   # results in "ghost" pages, so using a slightly higher value and then
   # trimming the resulting scanned image avoids the problem.
+  # See https://gitlab.com/sane-project/backends/-/issues/572
   DEBUG=$DEBUG scanadf \
     --device-name hp5590 \
     --source "ADF Duplex" \

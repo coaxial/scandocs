@@ -32,20 +32,13 @@ crop_image_to_size() {
 
   # overscanning to avoid "ghost" pages, so image must be trimmed back down to
   # actual paper size
+  # $SCAN_RES set by scanadf
   local _x=$(paper_size_to_px $paper_format $SCAN_RES x)
   local _y=$(paper_size_to_px $paper_format $SCAN_RES y)
 
   debug_log_message "paper is $paper_format => ${_x}x${_y}px"
 
   local _crop_offset=0
-
-  # If the page number is even, it means it's the verso, which is upside down.
-  # The crop needs to skip the actual bottom of the image, which means the top
-  # when upside down.
-  # if [ $((page_number %2)) -eq 0 ]; then
-  #   local _crop_offset=$(($SCAN_HEIGHT - $_y)) # $SCAN_HEIGHT comes from scanadf
-  #   debug_log_message "even page, offsetting crop by Y ${_crop_offset}px"
-  # fi
 
   mogrify -crop ${_x}x${_y}+0+$_crop_offset $file
 }
@@ -114,7 +107,7 @@ debug_file_copy() {
     local _orig_file="$1"
     local _stage="$2"
 
-    debug_log_message "copying file after $_stage stage"
+    debug_log_message "writing debug file after $_stage stage"
     cp "$_orig_file" "${path}/${filename}-${_stage}.${extension}"
   fi
 }
