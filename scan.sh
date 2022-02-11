@@ -11,7 +11,6 @@ init_filenames() {
   out_filename="$date_string.pdf"
 }
 
-vendor_lib_dir="./lib/vendor"
 docs_scanned=0
 init_date_string
 paper_format="a4" # or letter
@@ -45,7 +44,8 @@ prompt_insert_pages() {
   fi
 
   if [[ $input = "" ]]; then
-    local _adf_loaded=$(scanimage -d hp5590 -A --format=pnm | grep -Po "adf.*\[\K(\w{2,3})\]" | grep -Eo "\w{2,3}")
+    local _adf_loaded
+    _adf_loaded=$(scanimage -d hp5590 -A --format=pnm | grep -Po "adf.*\[\K(\w{2,3})\]" | grep -Eo "\w{2,3}")
     if [[ $_adf_loaded = "yes" ]]; then
       scan_new_doc
     else
@@ -86,7 +86,7 @@ increment_docs_count() {
 
 assemble_pdf() {
   pages="${temp_dir}/${base_filename}*.png"
-  convert $pages "$temp_dir/$out_filename" 
+  convert "$pages" "$temp_dir/$out_filename" 
 }
 
 move_pdf() {
