@@ -1,13 +1,21 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+init_date_string() {
+  date_string="$(date "+%Y%m%d_%H%M%S")"
+}
+
+init_filenames() {
+  base_filename="$date_string-$paper_format-"
+  filename_pattern="$base_filename%04d.pnm"
+  out_filename="$date_string.pdf"
+}
+
 vendor_lib_dir="./lib/vendor"
 docs_scanned=0
-uuid=0
-date_string="$(date "+%Y%m%d_%H%M%S")"
-base_filename="$date_string-"
-filename_pattern="base_filename%04d.pnm"
-out_filename="$date_string.pdf"
+init_date_string
+paper_format="a4" # or letter
+init_filenames
 temp_dir="/tmp"
 scans_dir="$HOME/Documents/scans"
 DEBUG="${DEBUG:-}"
@@ -29,16 +37,6 @@ scan_new_doc() {
   assemble_pdf
   move_pdf
   increment_docs_count
-}
-
-init_date_string() {
-  date_string="$(date "+%Y%m%d_%H%M%S")"
-}
-
-init_filenames() {
-  base_filename="$date_string-"
-  filename_pattern="$date_string-%04d.pnm"
-  out_filename="$date_string.pdf"
 }
 
 scan_pages() {
