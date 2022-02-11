@@ -58,17 +58,18 @@ init_filenames() {
 
 scan_pages() {
   echo "Scanning document..."
+  # An A4 page is 210x297mm. However, using 297mm confuses the scanner and
+  # results in "ghost" pages, so using a slightly higher value and then
+  # trimming the resulting scanned image avoids the problem.
   DEBUG=$DEBUG scanadf \
     --device-name hp5590 \
     --source "ADF Duplex" \
-    -x 210.0 -y 297.0 \
+    -x 210.0 -y 320.0 \
     --mode Gray \
     --resolution 300 \
     --scan-script ./lib/process_page.sh \
     --script-wait \
-    --output-file "$temp_dir/$filename_pattern" \
-    --progress \
-    --verbose
+    --output-file "$temp_dir/$filename_pattern"
 }
 
 increment_docs_count() {
@@ -76,18 +77,17 @@ increment_docs_count() {
 }
 
 assemble_pdf() {
-  pages="$temp_dir/$base_filename\*.pnm"
-  echo $pages
+  pages="$temp_dir/$base_filename*.pnm"
   convert $pages "$temp_dir/$out_filename" 
 }
 
 move_pdf() {
-  mv "$temp_dir/$out_filename" "$scans_dir/"
+  cp "$temp_dir/$out_filename" "$scans_dir/"
   echo "$scans_dir/$out_filename created."
 }
 
 handle_exit() {
-  echo "Scanned $docs_scanned documents."
+  echo "Scanned $docs_scanned documents. Bye!"
   exit 0
 }
 

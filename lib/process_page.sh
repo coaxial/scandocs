@@ -16,13 +16,6 @@ out_filename="$date_string.pdf"
 temp_pdf_file="$path/$out_filename"
 DEBUG="${DEBUG:-}"
 
-echo $SCAN_RES
-echo $SCAN_WIDTH
-echo $SCAN_HEIGHT
-echo $SCAN_DEPTH
-echo $SCAN_FORMAT
-echo $SCAN_FORMAT_ID
-
 debug_notice() {
   if [[ $DEBUG ]]; then
     echo "Debug output enabled"
@@ -36,9 +29,14 @@ rotate_verso() {
     if [[ $DEBUG ]]; then
       echo "$page_number is even, flipping"
     fi
-    # rotate in-place
-    convert -rotate "180" $file $file
+    mogrify -rotate 180 $file
   fi
+}
+
+crop_image_to_size() {
+  # Found using scanadf ... --verbose and -x 210 -y 297
+  # 2481x3508 = A4
+  mogrify -crop 2481x3508+0+0 $file
 }
 
 deskew_page() {
@@ -72,9 +70,12 @@ cleanup() {
 }
 
 debug_notice
-echo "Processing page $page_number..."
+echo "[P$page_number] Processing page..."
+crop_image_to_size
 rotate_verso
 deskew_page
+clean_page
 # create_or_append_pdf
-cleanup
-echo "Page $page_number added to $temp_pdf_file."
+# cleanup
+# echo "Page $page_number added to $temp_pdf_file."
+echo "[P$page_number] Done processing page."
