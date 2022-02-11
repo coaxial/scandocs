@@ -3,12 +3,10 @@ set -euo pipefail
 
 vendor_lib_dir="./lib/vendor"
 docs_scanned=0
-pages_scanned=0
-page_number=0
 uuid=0
 date_string="$(date "+%Y%m%d_%H%M%S")"
 base_filename="$uuid-$date_string-"
-filename_pattern="base_filename%04d.pnm" # not used anymore
+filename_pattern="base_filename%04d.pnm"
 out_filename="$date_string.pdf"
 temp_dir="/tmp"
 scans_dir="$HOME/Documents/scans"
@@ -35,56 +33,46 @@ prompt_insert_pages() {
 }
 
 scan_new_doc() {
-  init_vars
-  scan_page
-  clean_pages
+  init_uuid
+  init_date_string
+  init_filenames
+  scan_pages
   assemble_pdf
   move_pdf
   increment_docs_count
 }
 
-init_vars() {
+init_uuid() {
   uuid="$(dbus-uuidgen)"
+}
+
+init_date_string() {
   date_string="$(date "+%Y%m%d_%H%M%S")"
+}
+
+init_filenames() {
   base_filename="$uuid-$date_string-"
   filename_pattern="$uuid-$date_string-%04d.pnm"
   out_filename="$date_string.pdf"
-  page_number=0
 }
 
-scan_page() {
-  page_number=$((page_number +1))
-  echo "Scanning page $page_number..."
-
-  DEBUG=$DEBUG scanimage \
+scan_pages() {
+  echo "Scanning document..."
+  DEBUG=$DEBUG scanadf \
     --device-name hp5590 \
     --source "ADF Duplex" \
     -x 210.0 -y 297.0 \
     --mode Gray \
     --resolution 300 \
-    --output-file "$temp_dir/$base_filename$page_number.pnm" \
+    --scan-script ./lib/process_page.sh \
+    --script-wait \
+    --output-file "$temp_dir/$filename_pattern" \
     --progress \
     --verbose
-  check_pages_left
-}
-
-check_pages_left() {
-  pages_left=$(scanimage -d hp5590 -A | grep -Po "adf.*\[\K(\w{2,3})\]" | grep -Eo "\w{2,3}")
-
-  if [[ $pages_left = "yes" ]]; then
-    scan_page
-  fi
 }
 
 increment_docs_count() {
   docs_scanned=$((docs_scanned +1))
-}
-
-clean_pages() {
-  pages=$temp_dir/$base_filename*.pnm
-  echo $pages
-  # $vendor_lib_dir/textdeskew $file $file > /dev/null 2>&1 || echo "Not enough text, unable to deskew page"
-  # $vendor_lib_dir/textcleaner $file $file
 }
 
 assemble_pdf() {
