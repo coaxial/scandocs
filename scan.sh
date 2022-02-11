@@ -21,13 +21,37 @@ scans_dir="$HOME/Documents/scans"
 DEBUG="${DEBUG:-}"
 
 prompt_insert_pages() {
-  prompt="Insert document pages in ADF and press any key to start scanning, q to quit. "
-  read -r -p "$prompt" -s -n 1 input
+  prompt="Insert document pages in ADF and press <Enter> to start scanning, s to change paper size, q to quit. [${paper_format}] "
+  log_message "$prompt"
+  read -r -s -n 1 input
   echo ""
+
+  if [[ $input = "s" ]]; then
+    debug_log_message "Paper format was $paper_format"
+
+    if [[ $paper_format = "a4" ]]; then
+      paper_format="letter"
+    elif [[ $paper_format = "letter" ]]; then
+      paper_format="legal"
+    else
+      paper_format="a4"
+    fi
+
+    debug_log_message "Paper format is now $paper_format"
+  fi
+
   if [[ $input = "q" ]]; then
     handle_exit
   fi
-  scan_new_doc
+
+  if [[ $input = "" ]]; then
+    local _adf_loaded=$(scanimage -d hp5590 -A --format=pnm | grep -Po "adf.*\[\K(\w{2,3})\]" | grep -Eo "\w{2,3}")
+    if [[ $_adf_loaded = "yes" ]]; then
+      scan_new_doc
+    else
+      log_message "No document detected in ADF."
+    fi
+  fi
 }
 
 scan_new_doc() {
@@ -40,7 +64,7 @@ scan_new_doc() {
 }
 
 scan_pages() {
-  echo "Scanning document..."
+  log_message "Scanning document..."
   # An A4 page is 210x297mm. However, using 297mm confuses the scanner and
   # results in "ghost" pages, so using a slightly higher value and then
   # trimming the resulting scanned image avoids the problem.
@@ -70,10 +94,26 @@ move_pdf() {
 }
 
 handle_exit() {
-  echo "Scanned $docs_scanned documents. Bye!"
+  log_message "Scanned $docs_scanned documents. Bye!"
   exit 0
 }
 
-while true; do
-  prompt_insert_pages
-done
+debug_log_message () {
+  if [[ $DEBUG ]]; then
+    log_message "DEBUG: $1"
+  fi
+}
+
+log_message() {
+  # output messages to stderr
+  echo "[scan ] $1" >&2
+}
+
+main() {
+  debug_log_message "debug output enabled"
+  while true; do
+    prompt_insert_pages
+  done
+}
+
+main

@@ -17,19 +17,10 @@ out_filename="$date_string.pdf"
 temp_pdf_file="$path/$out_filename"
 DEBUG="${DEBUG:-}"
 
-debug_notice() {
-  if [[ $DEBUG ]]; then
-    log_message "Debug output enabled"
-  fi
-}
-
-
 rotate_verso() {
   # when scanning duplex using the ADF, the verso page is upside down
-  if [ $((page_number %2)) -eq 0 ]; then
-    if [[ $DEBUG ]]; then
-      log_message "even page, flipping"
-    fi
+  if [[ $((page_number %2)) = 0 ]]; then
+    debug_log_message "even page, flipping"
     mogrify -rotate 180 $file
   fi
 }
@@ -38,32 +29,25 @@ crop_image_to_size() {
   local _x=$(paper_size_to_px $paper_format $SCAN_RES x)
   local _y=$(paper_size_to_px $paper_format $SCAN_RES y)
 
-  if [[ $DEBUG ]]; then
-    log_message "Paper is $paper_format => ${_x}x${_y}px"
-  fi
+  debug_log_message "paper is $paper_format => ${_x}x${_y}px"
 
-  local crop_offset=0
-
+  local _crop_offset=0
 
   # If the page number is even, it means it's the verso, which is upside down.
   # The crop needs to skip the actual bottom of the image, which means the top
   # when upside down.
   if [ $((page_number %2)) -eq 0 ]; then
-    local _crop_offset=$(($SCAN_HEIGHT - $y)) # $SCAN_HEIGHT comes from scanadf
-    if [[ $DEBUG ]]; then
-      log_message "even page, offsetting crop by Y $_crop_offset px"
-    fi
+    local _crop_offset=$(($SCAN_HEIGHT - $_y)) # $SCAN_HEIGHT comes from scanadf
+    debug_log_message "even page, offsetting crop by Y ${_crop_offset}px"
   fi
 
   mogrify -crop ${_x}x${_y}+0+$_crop_offset $file
 }
 
 paper_size_to_px() {
-  local _format=$1
-  local _dpi=$2
-  local _dimension=$3
-  local _x_mm=0
-  local _y_mm=0
+  local _format="$1"
+  local _dpi="$2"
+  local _dimension="$3"
 
   if [[ $_format = "a4" ]]; then
     local _x_mm=210.0 # mm
@@ -78,8 +62,8 @@ paper_size_to_px() {
 
   # scale=0; (px+0.5)/1 is to round up and remove the decimals
   # 1in = 25.4mm
-  local _x_px=$(bc <<< "scale=4; inches=$_x_mm/25.4; px=inches*$dpi; scale=0; (px+0.5)/1")
-  local _y_px=$(bc <<< "scale=4; inches=$_y_mm/25.4; px=inches*$dpi; scale=0; (px+0.5)/1")
+  local _x_px=$(bc <<< "scale=4; inches=${_x_mm}/25.4; px=inches*${_dpi}; scale=0; (px+0.5)/1")
+  local _y_px=$(bc <<< "scale=4; inches=${_y_mm}/25.4; px=inches*${_dpi}; scale=0; (px+0.5)/1")
 
   if [[ $_dimension = "x" ]]; then
     echo $_x_px
@@ -100,13 +84,22 @@ clean_page() {
 
 log_message() {
   # output messages to stderr
-  >&2 echo "[P$page_number] $1"
+  echo "[p$page_number] $1" >&2
 }
 
-debug_notice
-log_message "Processing page..."
-rotate_verso
-deskew_page
-clean_page
-crop_image_to_size
-log_message "Done processing page."
+debug_log_message () {
+  if [[ $DEBUG ]]; then
+    log_message "DEBUG: $1"
+  fi
+}
+
+main() {
+  log_message "Processing page..."
+  rotate_verso
+  deskew_page
+  clean_page
+  crop_image_to_size
+  log_message "Done processing page."
+}
+
+main
