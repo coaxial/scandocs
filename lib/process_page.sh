@@ -8,17 +8,21 @@ basename="$(basename "$file")"
 filename="${basename%.*}"
 extension="${basename##*.}"
 # expected filename format is
-# <date_string>-<paper_format>-<page_number>
+# <date_string>-<paper_format>-<page_number>-<processing options>
 paper_format=$(echo "$filename" | cut -d"-" -f2)
 page_number=$(echo "$filename" | cut -d"-" -f3)
+processing=$(echo "$filename" | cut -d"-" -f4)
 vendor_lib_dir="./lib/vendor"
 DEBUG="${DEBUG:-}"
 
 rotate_verso() {
   debug_log_message "rotating page"
 
+  local _normalized_page_number
+  # shellcheck disable=SC2001
+  _normalized_page_number="$(echo "$page_number" | sed 's/^0*//')"
   # when scanning duplex using the ADF, the verso page is upside down
-  if [[ $((page_number %2)) = 0 ]]; then
+  if [[ $((_normalized_page_number %2)) = 0 ]]; then
     debug_log_message "even page, flipping"
     mogrify -rotate 180 "$file"
   fi
@@ -38,6 +42,19 @@ crop_image_to_size() {
   debug_log_message "paper is $paper_format => ${_x}x${_y}px"
 
   local _crop_offset=0
+
+  # detect if image is landscape and crop it accordingly
+  local _w
+  _w=$(identify -format "%w" "$file")
+  local _h
+  _h=$(identify -format "%h" "$file")
+
+  if [[ $_h < $_w ]]; then
+    debug_log_message "landscape page detected"
+    local _tmp_x=$_x
+    _x=$_y
+    _y=$_tmp_x
+  fi
 
   mogrify -crop "${_x}x${_y}+0+$_crop_offset" "$file"
 }
@@ -75,10 +92,14 @@ paper_size_to_px() {
 }
 
 deskew_page() {
-  debug_log_message "deskewing page"
+  if [[ $processing = "nodeskew" ]]; then
+    debug_log_message "no deskewing requested, skipping"
+  else
+    debug_log_message "deskewing page"
 
-  # deskew in place
-  $vendor_lib_dir/textdeskew "$file" "$file" > /dev/null 2>&1 || log_message "Not enough text on page, unable to deskew"
+    # deskew in place
+    $vendor_lib_dir/textdeskew "$file" "$file" > /dev/null 2>&1 || log_message "Not enough text on page, unable to deskew"
+  fi
 }
 
 clean_page() {
@@ -126,14 +147,14 @@ main() {
   rotate_verso
   debug_file_copy "$file" "02-rotate"
 
+  clean_page
+  debug_file_copy "$file" "03-clean"
+
   deskew_page
-  debug_file_copy "$file" "03-deskew"
+  debug_file_copy "$file" "04-deskew"
 
   crop_image_to_size
-  debug_file_copy "$file" "04-crop"
-
-  clean_page
-  debug_file_copy "$file" "05-clean"
+  debug_file_copy "$file" "05-crop"
 
   convert_to_png
   debug_file_copy "$file" "06-png"

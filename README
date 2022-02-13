@@ -3,3 +3,11 @@
 - Imagemagick
 - Ghostscript <= 9.24
 - remove the whole section below `<!-- disable ghostscript format types -->` in `/etc/ImageMagick-6/policy.xml`.
+- edit these limits:
+
+```
+  <policy domain="resource" name="memory" value="2GiB"/>
+  <policy domain="resource" name="map" value="4GiB"/>
+  <policy domain="resource" name="area" value="1GP"/>
+  <policy domain="resource" name="disk" value="64GiB"/>
+```
