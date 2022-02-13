@@ -137,7 +137,7 @@ scan_pages() {
       local _file="$temp_dir/${base_filename}${_flatbed_page_count}.pnm"
       local _scan_height_px
       _scan_height_px="$(bc <<< "scale=4; inches=${x}/25.4; px=inches*${_res}; scale=0; (px+0.5)/1")"
-      _flatbed_page_count=$(($_flatbed_page_count + 1))
+      _flatbed_page_count=$((_flatbed_page_count + 1))
 
       DEBUG=$DEBUG scanimage \
         --device-name hp5590 \

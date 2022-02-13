@@ -19,6 +19,7 @@ rotate_verso() {
   debug_log_message "rotating page"
 
   local _normalized_page_number
+  # shellcheck disable=SC2001
   _normalized_page_number="$(echo "$page_number" | sed 's/^0*//')"
   # when scanning duplex using the ADF, the verso page is upside down
   if [[ $((_normalized_page_number %2)) = 0 ]]; then
