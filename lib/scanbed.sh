@@ -51,6 +51,9 @@ show_prompt() {
 
 scan_page() {
   local filename
+  # we want the format specifier in $filename_pattern to be interpreted by
+  # printf
+  # shellcheck disable=SC2059
   filename=$(printf "$filename_pattern" "$current_page_number")
 
   scanimage \
@@ -71,6 +74,9 @@ scan_page() {
 
     mm_to_px
     local whitepage_filename
+    # we want the format specifier in $filename_pattern to be interpreted by
+    # printf
+    # shellcheck disable=SC2059
     whitepage_filename=$(printf "$filename_pattern" "$current_page_number")
     convert -size ${x_px}x${y_px} xc:white "$whitepage_filename"
     process_page "$whitepage_filename"

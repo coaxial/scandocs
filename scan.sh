@@ -167,11 +167,11 @@ assemble_pdf() {
 
   # count number of matching docs to avoid errors when no pages scanned
   local pages_array
-  pages_array=( $pages )
+  IFS=" " read -r -a pages_array <<< "$pages"
   local pages_count=${#pages_array[@]}
   debug_log_message "$pages_count pages found"
 
-  if [[ $pages_count > 0 ]]; then
+  if [[ $pages_count -gt 0 ]]; then
     debug_log_message "assembling pdf at $temp_dir/$out_filename"
     convert "$pages" "$temp_dir/$out_filename" 
   else
@@ -183,7 +183,7 @@ move_pdf() {
   local temp_pdf
   temp_pdf="$temp_dir/$out_filename"
 
-  if [ -f $temp_pdf ]; then
+  if [ -f "$temp_pdf" ]; then
     debug_log_message "temp_pdf found at $temp_pdf"
     cp "$temp_pdf" "$scans_dir/"
     log_message "$scans_dir/$out_filename created."
