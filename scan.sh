@@ -167,7 +167,7 @@ assemble_pdf() {
 
   # count number of matching docs to avoid errors when no pages scanned
   local pages_array
-  IFS=" " read -r -a pages_array <<< "$pages"
+  pages_array=$( $pages )
   local pages_count=${#pages_array[@]}
   debug_log_message "$pages_count pages found"
 
