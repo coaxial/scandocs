@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
+shopt -s globstar nullglob
+
+DEBUG="${DEBUG:-}"
 
 debug_log_message () {
   if [[ $DEBUG ]]; then
@@ -36,7 +39,6 @@ processing=""
 init_filenames
 temp_dir="/tmp"
 scans_dir="$HOME/Documents/scans"
-DEBUG="${DEBUG:-}"
 source="adf"
 
 prompt_insert_pages() {
@@ -129,35 +131,8 @@ scan_pages() {
       --scan-script ./lib/process_page.sh \
       --script-wait \
       --output-file "$temp_dir/$filename_pattern"
-  else
-    local _flatbed_page_count=0
-
-    scan_flatbed_page() {
-      log_message "Scanning document with flatbed..."
-      local _file="$temp_dir/${base_filename}${_flatbed_page_count}.pnm"
-      local _scan_height_px
-      _scan_height_px="$(bc <<< "scale=4; inches=${x}/25.4; px=inches*${_res}; scale=0; (px+0.5)/1")"
-      _flatbed_page_count=$((_flatbed_page_count + 1))
-
-      DEBUG=$DEBUG scanimage \
-        --device-name hp5590 \
-        -x "$x" -y "$y" \
-        --mode Gray \
-        --resolution "$_res" \
-        --progress \
-        > "$_file"
-
-      # SCAN_RES and SCAN_HEIGHT are provided by scanadf, but not scanimage
-      SCAN_RES="$_res" SCAN_HEIGHT="$_scan_height_px" ./lib/process_page.sh "$_file"
-    }
-
-    local _prompt="n to scan next page, a to assemble document"
-    log_message "$_prompt"
-    read -r -s -n 1 input
-
-    if [[ $input = "n" ]]; then
-      scan_flatbed_page
-    fi
+  elif [[ $source = "flatbed" ]]; then
+    DEBUG=$DEBUG ./lib/scanbed.sh hp5590 "$x" "$y" "Gray" "$_res" "$temp_dir/$filename_pattern"
   fi
 }
 
@@ -189,12 +164,33 @@ increment_docs_count() {
 
 assemble_pdf() {
   pages="${temp_dir}/${base_filename}*.png"
-  convert "$pages" "$temp_dir/$out_filename" 
+
+  # count number of matching docs to avoid errors when no pages scanned
+  local pages_array
+  pages_array=( $pages )
+  local pages_count=${#pages_array[@]}
+  debug_log_message "$pages_count pages found"
+
+  if [[ $pages_count > 0 ]]; then
+    debug_log_message "assembling pdf at $temp_dir/$out_filename"
+    convert "$pages" "$temp_dir/$out_filename" 
+  else
+    debug_log_message "no pages, skipping pdf assembly"
+  fi
 }
 
 move_pdf() {
-  cp "$temp_dir/$out_filename" "$scans_dir/"
-  echo "$scans_dir/$out_filename created."
+  local temp_pdf
+  temp_pdf="$temp_dir/$out_filename"
+
+  if [ -f $temp_pdf ]; then
+    debug_log_message "temp_pdf found at $temp_pdf"
+    cp "$temp_pdf" "$scans_dir/"
+    log_message "$scans_dir/$out_filename created."
+  else
+    debug_log_message "no temp_pdf found at $temp_pdf"
+    log_message "no PDF created."
+  fi
 }
 
 handle_exit() {
