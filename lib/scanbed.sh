@@ -43,7 +43,11 @@ show_prompt() {
   if [[ $input = "" ]]; then
     scan_page
   elif [[ $input = "v" ]]; then
-    genverso=yes
+    if [[ $genverso = "yes" ]]; then
+      genverso=no
+    else
+      genverso=yes
+    fi
   elif [[ $input = "q" ]]; then
     exit_req=1
   fi
