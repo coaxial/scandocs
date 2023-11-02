@@ -103,10 +103,14 @@ deskew_page() {
 }
 
 clean_page() {
-  debug_log_message "cleaning page"
+  if [[ $clean = "noclean" ]]; then
+    debug_log_message "no cleaning requested, skipping"
+  else
+    debug_log_message "cleaning page"
 
-  # clean in place
-  $vendor_lib_dir/textcleaner "$file" "$file"
+    # clean in place
+    $vendor_lib_dir/textcleaner "$file" "$file"
+  fi
 }
 
 convert_to_png() {
