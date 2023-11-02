@@ -35,14 +35,15 @@ debug_log_message "debug output enabled"
 docs_scanned=0
 init_date_string
 paper_format="a4" # or letter
-processing=""
+processing="nodeskew"
 init_filenames
 temp_dir="/tmp"
 scans_dir="$HOME/Documents/scans"
 source="adf"
+clean="noclean"
 
 prompt_insert_pages() {
-  local _prompt="Insert document and press <Enter> to start scanning, d to toggle deskewing on/off, s to change paper size, o to change source, q to quit. [${paper_format}] [${source}] [${processing}] "
+  local _prompt="Insert document and press <Enter> to start scanning, d to toggle deskewing on/off, s to change paper size, o to change source, c to toggle cleaning on/off, q to quit. [${paper_format}] [${source}] [${processing}] [${clean}] "
   log_message "$_prompt"
   read -r -s -n 1 input
   echo ""
@@ -83,6 +84,14 @@ prompt_insert_pages() {
     fi
 
     debug_log_message "source is now $source"
+  fi
+
+  if [[ $input = "c" ]]; then
+    if [[ $clean = "clean" ]]; then
+      clean="noclean"
+    else
+      clean="clean"
+    fi
   fi
 
   if [[ $input = "q" ]]; then
