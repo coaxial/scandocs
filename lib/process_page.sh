@@ -117,7 +117,7 @@ clean_page() {
 convert_to_png() {
   debug_log_message "converting page"
 
-  convert "$file" "$path/$filename.png"
+  pnmtopng "$file" > "$path/$filename.png"
 }
 
 log_message() {
