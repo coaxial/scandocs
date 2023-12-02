@@ -184,7 +184,7 @@ assemble_pdf() {
 
   if [[ $pages_count -gt 0 ]]; then
     debug_log_message "assembling pdf at $temp_dir/$out_filename"
-    convert "$pages" "$temp_dir/$out_filename" 
+    img2pdf "$pages" -o "$temp_dir/$out_filename"
   else
     debug_log_message "no pages, skipping pdf assembly"
   fi

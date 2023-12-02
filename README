@@ -1,5 +1,6 @@
 ## Prerequisites
 
+- img2pdf
 - Imagemagick
 - Ghostscript <= 9.24
 - remove the whole section below `<!-- disable ghostscript format types -->` in `/etc/ImageMagick-6/policy.xml`.
