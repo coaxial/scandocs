@@ -22,7 +22,7 @@ init_date_string() {
 init_filenames() {
   base_filename="$date_string-$paper_format-"
   if [[ $processing != "" ]]; then
-    filename_pattern="$base_filename%04d-${processing}.pnm"
+    filename_pattern="$base_filename%04d-${processing}-${clean}.pnm"
   else
     filename_pattern="$base_filename%04d.pnm"
   fi
@@ -36,11 +36,11 @@ docs_scanned=0
 init_date_string
 paper_format="a4" # or letter
 processing="nodeskew"
+clean="noclean"
 init_filenames
 temp_dir="/tmp"
 scans_dir="$HOME/Documents/scans"
 source="adf"
-clean="noclean"
 
 prompt_insert_pages() {
   local _prompt="Insert document and press <Enter> to start scanning, d to toggle deskewing on/off, s to change paper size, o to change source, c to toggle cleaning on/off, q to quit. [${paper_format}] [${source}] [${processing}] [${clean}] "

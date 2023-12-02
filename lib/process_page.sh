@@ -12,6 +12,7 @@ extension="${basename##*.}"
 paper_format=$(echo "$filename" | cut -d"-" -f2)
 page_number=$(echo "$filename" | cut -d"-" -f3)
 processing=$(echo "$filename" | cut -d"-" -f4)
+clean=$(echo "$filename" | cut -d"-" -f5)
 vendor_lib_dir="./lib/vendor"
 DEBUG="${DEBUG:-}"
 
