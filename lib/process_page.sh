@@ -12,6 +12,7 @@ extension="${basename##*.}"
 paper_format=$(echo "$filename" | cut -d"-" -f2)
 page_number=$(echo "$filename" | cut -d"-" -f3)
 processing=$(echo "$filename" | cut -d"-" -f4)
+clean=$(echo "$filename" | cut -d"-" -f5)
 vendor_lib_dir="./lib/vendor"
 DEBUG="${DEBUG:-}"
 
@@ -116,7 +117,14 @@ clean_page() {
 convert_to_png() {
   debug_log_message "converting page"
 
-  convert "$file" "$path/$filename.png"
+  pnmtopng "$file" > "$path/$filename.png"
+}
+
+optimze_png() {
+  debug_log_message "optimizing png"
+
+  # oxipng --quiet "$path/$filename.png"
+  pngquant 64 "$path/$filename.png" --ext .png --force
 }
 
 log_message() {
@@ -134,9 +142,11 @@ debug_file_copy() {
   if [[ $DEBUG ]]; then
     local _orig_file="$1"
     local _stage="$2"
+    local _debug_file="${path}/${filename}-${_stage}.${extension}"
 
-    debug_log_message "writing debug file after $_stage stage"
-    cp "$_orig_file" "${path}/${filename}-${_stage}.${extension}"
+    debug_log_message "writing debug file at ${_debug_file} after $_stage stage"
+
+    cp "$_orig_file" "${_debug_file}"
   fi
 }
 
@@ -162,6 +172,9 @@ main() {
 
   convert_to_png
   debug_file_copy "$file" "06-png"
+
+  optimze_png
+  debug_file_copy "$file" "07-optim"
 
   log_message "Done processing page."
 }
