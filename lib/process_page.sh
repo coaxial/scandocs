@@ -123,8 +123,16 @@ convert_to_png() {
 optimze_png() {
   debug_log_message "optimizing png"
 
-  # oxipng --quiet "$path/$filename.png"
-  pngquant 64 "$path/$filename.png" --ext .png --force
+  local _options
+
+  if [[ $color = "Color" ]]; then
+    _options="--quality=65-90"
+  else
+    _options="64"
+  fi
+
+    pngquant $_options "$path/$filename.png" --ext .png --force
+    # oxipng --quiet "$path/$filename.png"
 }
 
 log_message() {

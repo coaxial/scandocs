@@ -37,13 +37,14 @@ init_date_string
 paper_format="a4" # or letter
 processing="nodeskew"
 clean="noclean"
+color="Color"
 init_filenames
 temp_dir="/tmp"
 scans_dir="$HOME/Documents/scans"
 source="adf"
 
 prompt_insert_pages() {
-  local _prompt="Insert document and press <Enter> to start scanning, d to toggle deskewing on/off, s to change paper size, o to change source, c to toggle cleaning on/off, q to quit. [${paper_format}] [${source}] [${processing}] [${clean}] "
+  local _prompt="Insert document and press <Enter> to start scanning, d to toggle deskewing on/off, s to change paper size, o to change source, c to toggle cleaning on/off, l to toggle gray/color, q to quit. [${paper_format}] [${source}] [${processing}] [${clean}] [${color}]"
   log_message "$_prompt"
   read -r -s -n 1 input
   echo ""
@@ -94,6 +95,14 @@ prompt_insert_pages() {
     fi
   fi
 
+  if [[ $input = "l" ]]; then
+    if [[ $color = "Gray" ]]; then
+      color="Color"
+    else
+      color="Gray"
+    fi
+  fi
+
   if [[ $input = "q" ]]; then
     handle_exit
   fi
@@ -123,7 +132,7 @@ scan_pages() {
   set_scan_area
   local _res=300
 
-  debug_log_message "paper format is $paper_format, scanning ${x}x${y}mm"
+  debug_log_message "paper format is $paper_format, scanning ${x}x${y}mm, ${color}"
 
   if [[ $source = "adf" ]]; then
     log_message "Scanning document with ADF..."
@@ -135,7 +144,7 @@ scan_pages() {
       --device-name hp5590 \
       --source "ADF Duplex" \
       -x "$x" -y "$y" \
-      --mode Gray \
+      --mode "$color" \
       --resolution "$_res" \
       --scan-script ./lib/process_page.sh \
       --script-wait \
